@@ -1,8 +1,8 @@
 <h1 align="center">Git Out Of Hours</h1>
 
 <p align="center">
-<a href="https://travis-ci.org/JohnAkerman/InvisionRipper"><img src="https://travis-ci.org/JohnAkerman/InvisionRipper.svg?branch=master" alt="Travis Build Status"></a> <a href="https://github.com/JohnAkerman/InvisionRipper/blob/master/LICENSE"><img src="https://img.shields.io/github/license/JohnAkerman/InvisionRipper.svg" alt="GitHub license"></a> <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code_style-standard-brightgreen.svg" alt="Standard - JavaScript Style Guide"></a>
-  <a href="https://snyk.io/test/github/JohnAkerman/InvisionRipper"><img src="https://snyk.io/test/github/JohnAkerman/InvisionRipper/badge.svg" alt="Known Vulnerabilities" data-canonical-src="https://snyk.io/test/github/JohnAkerman/InvisionRipper" style="max-width:100%;"></a>
+<a href="https://github.com/JohnAkerman/GitOutOfHours/blob/master/LICENSE"><img src="https://img.shields.io/github/license/JohnAkerman/GitOutOfHours.svg" alt="GitHub license"></a> <a href="https://standardjs.com"><img src="https://img.shields.io/badge/code_style-standard-brightgreen.svg" alt="Standard - JavaScript Style Guide"></a>
+  <a href="https://snyk.io/test/github/JohnAkerman/GitOutOfHours"><img src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours/badge.svg" alt="Known Vulnerabilities" data-canonical-src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours" style="max-width:100%;"></a>
 </p>
 
 View commit information on out of hours commits on a repo

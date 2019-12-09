@@ -3,37 +3,57 @@
 const ChildProcess = require("child_process");
 const Spawn = ChildProcess.spawn;
 const Moment = require("moment");
-const GitLogParser = require("gitlog-parser").parse;
 
-let commitHistory = {};
+let commitHistory = [];
+const DATE_FORMAT_LOG = "YYYY-MM-DD HH:mm:ss";
 const DATE_FORMAT = "MMM D, YYYY";    
 const TIME_FORMAT = "HH:mm:ss";
 
 function getCommitHistory(dateData, author) {
-
     return new Promise((resolve, reject) => {
-        GitLogParser(Spawn("git", ["log", "--since", dateData.start, "--until",  dateData.end]).stdout).on('commit', commit => {
-            if (!commit) return;
-            // Filter by specific author
-            if (author && commit.author.name !== author) return;
+		let git = Spawn("git", ["log", "--date=rfc", "--since", dateData.start, "--until", dateData.end]);
+		
+		git.stdout.on('data', (data) => {
+			data = data.toString();
+			
+			let commits = data.split(/\n\nc/);
+			
+			commits = commits.map((c) => {
+				c = /^c/.test(c) ? c : 'c' + c;
+								
+				return {
+					'author': c.match(/Author:\s([^<]+)?/)[1],
+					'email': c.match(/<(.+)>/)[1],
+					'date': c.match(/Date:\s*(.+)/)[1],
+					'message': c.match(/\n\n\s*(.+)/)[1]
+				}
+			});
 
-            const current = Moment(commit.date).format(DATE_FORMAT);
-            if (!commitHistory[current]) commitHistory[current] = {};
-
-            if (!commitHistory[current].count) commitHistory[current].count = 0;
-  
-            commitHistory[current].count++;
-            if (!commitHistory[current].details) commitHistory[current].details = [];
-            
-            commitHistory[current].details += `${Moment(commit.date).format(TIME_FORMAT)} - `;
-
-        }).on("error", (err) => {
-            console.error(err);
-            reject(err)
-        })
-        .on("finish", () => {
-            resolve();
-        });
+			commits.forEach((commit) => {
+				 if (!commit) return; 	
+				 
+				// filter by specific author
+				if (author && commit.author.toLowerCase().trim() !== author.toLowerCase().trim()) return;
+				
+				const current = Moment(commit.date).format(DATE_FORMAT_LOG);
+				
+				if (!commitHistory[current]) commitHistory[current] = {};
+				
+				commitHistory[current] = {
+					author: commit.author.trim(),
+					email: commit.email.trim(),
+					message: commit.message.trim(),
+					date: Moment(commit.date).format(TIME_FORMAT)
+				};
+			});
+		});
+		
+		git.stderr.on('data', (data) => {
+			console.error('Error retreiving commits', data.toString());
+			reject(data.toString());
+		});
+		
+		git.on('exit', () => resolve());
     });
 }
 
@@ -62,7 +82,7 @@ async function runLogger(dayCount, author) {
     }
 
     if (Object.keys(commitHistory).length > 0) {
-        console.table(commitHistory);
+        console.table(commitHistory, ['author', 'message']);
     }
 
     if (author) console.log(`${author} committed late ${pluralise(Object.keys(commitHistory).length, 'time')} in the last ${pluralise(dayCount, 'day')}`);

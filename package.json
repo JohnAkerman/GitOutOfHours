@@ -13,7 +13,6 @@
   "author": "John Akerman",
   "license": "MIT",
   "dependencies": {
-    "gitlog-parser": "0.0.4",
     "moment": "^2.24.0"
   }
 }

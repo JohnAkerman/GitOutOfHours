@@ -1,13 +1,13 @@
 {
   "name": "gitoutofhours",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "View commit information on out of hours commits on a repo",
   "main": "index.js",
   "bin": {
     "gitoutofhours": "./bin/gitoutofhours.js"
   },
   "author": "John Akerman",
-  "repository": { 
+  "repository": {
     "type": "git",
     "url": "https://github.com/JohnAkerman/GitOutOfHours.git"
   },

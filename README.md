@@ -4,8 +4,7 @@
 <p align="center">
 <a href="https://www.npmjs.com/package/gitoutofhours" target="_blank"><img alt="npm" src="https://img.shields.io/npm/v/gitoutofhours"></a>
 <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/JohnAkerman/GitOutOfHours">
-<a href="https://github.com/JohnAkerman/GitOutOfHours/blob/master/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/JohnAkerman/GitOutOfHours"></a>
-
+<img alt="NPM" src="https://img.shields.io/npm/l/gitoutofhours">
 <img src="https://img.shields.io/github/languages/top/JohnAkerman/GitOutOfHours" alt="Top Language" />
   <a href="https://snyk.io/test/github/JohnAkerman/GitOutOfHours"><img src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours/badge.svg" alt="Known Vulnerabilities" data-canonical-src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours" style="max-width:100%;"></a>
 </p>

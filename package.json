@@ -23,6 +23,7 @@
     "overtime"
   ],
   "license": "MIT",
+  "publishConfig": { "registry": "https://npm.pkg.github.com/" },
   "dependencies": {
     "moment": "^2.24.0"
   }

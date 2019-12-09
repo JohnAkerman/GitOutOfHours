@@ -6,9 +6,6 @@
   "bin": {
     "gitoutofhours": "./bin/gitoutofhours.js"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "John Akerman",
   "repository": { 
     "type": "git",

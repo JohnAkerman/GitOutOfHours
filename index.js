@@ -15,7 +15,7 @@ function getCommitHistory(dateData, author) {
 			let commits = data.split(/\n\nc/);
 
 			commits = commits.map(c => {
-				c = /^c/.test(c) ? c : 'c' + c;
+				c = c.startsWith('c') ? c : 'c' + c;
 
 				return {
 					author: c.match(/Author:\s([^<]+)?/)[1],

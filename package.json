@@ -1,7 +1,6 @@
 {
   "name": "gitoutofhours",
   "version": "0.1.0",
-  "private": true,
   "description": "View commit information on out of hours commits on a repo",
   "main": "index.js",
   "bin": {

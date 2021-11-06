@@ -5,6 +5,7 @@ const moment = require('moment');
 
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
+const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
 
 function getCommitHistory({dateData, author, skipTimeCheck}) {
 	return new Promise((resolve, reject) => {
@@ -15,7 +16,7 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
 
         /* istanbul ignore if */   
         if (!skipTimeCheck) {
-            params.push('--date=rfc', '--since', dateData.start, '--until', dateData.end);
+            params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
         }
 
         let logData = [];
@@ -38,8 +39,7 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
                 };
             });
 
-            logData = parseCommitData(logData, commits, author);
-
+            parseCommitData(logData, commits, author);
         });
 
         git.stderr.on('data', data => {
@@ -48,8 +48,8 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
         });
 
         git.on('exit', () => {
-            if (logData && logData.length > 0) resolve(logData)
-            else resolve(null);
+            if (logData) resolve(logData)
+            else reject('Error retrieving commits');
         });
 	});
 }
@@ -69,7 +69,7 @@ function parseCommitData(logData, commits, author) {
             return;
         }
 
-        const current = moment(commit.date, "ddd MMM D HH:mm:ss YYYY ZZ").format(DATE_FORMAT_LOG);
+        const current = moment(commit.date, GIT_LOG_DATE_FORMAT).format(DATE_FORMAT_LOG);
         
         if (!logData[current]) {
             logData[current] = {};
@@ -79,7 +79,7 @@ function parseCommitData(logData, commits, author) {
             author: commit.author.trim(),
             email: commit.email.trim(),
             message: commit.message.trim(),
-            date: moment(commit.date, "ddd MMM D HH:mm:ss YYYY ZZ").format(TIME_FORMAT)
+            date: moment(commit.date, GIT_LOG_DATE_FORMAT).format(TIME_FORMAT)
         };
     });
 
@@ -126,7 +126,7 @@ async function runLogger(opts) {
         promises.push(getCommitHistory({ dateData, author: opts.author, skipTimeCheck: opts.skipTimeCheck}));
     }
 
-   return await runHistoryPromises(promises, opts);
+   return runHistoryPromises(promises, opts);
 }
 
 async function runHistoryPromises(promises, opts) {
@@ -143,23 +143,28 @@ async function displayResults(commitHistory, opts) {
         throw new Error('No commit history found');
     }
 
+    let newOutput = [];
+
     Object.keys(commitHistory).forEach(key => {
-        if (commitHistory[key] === null) {
-            delete commitHistory[key];
-        }
+        if (commitHistory[key] == null) return false;
+
+        Object.keys(commitHistory[key]).forEach(item => {
+            if (commitHistory[key][item] !== null) {
+                newOutput.push(commitHistory[key][item]);
+            }
+        });
     });
 
-    if (commitHistory.length != 0 && Object.keys(commitHistory).length > 0) {
-        console.table(commitHistory, ['author', 'message']);
+    if (newOutput.length > 0 && Object.keys(newOutput).length > 0) {
+        console.table(newOutput, ['author', 'date', 'message']);
         if (opts.author) {
-            console.log(`${opts.author} committed late ${pluralise(Object.keys(commitHistory).length, 'time')} in the last ${pluralise(opts.dayCount, 'day')}`);
+            console.log(`${opts.author} committed late ${pluralise(Object.keys(newOutput).length, 'time')} in the last ${pluralise(opts.dayCount, 'day')}`);
         } else {
-            console.log(`${pluralise(Object.keys(commitHistory).length, 'commit')} after hours were made in the last ${pluralise(opts.dayCount, 'day')}`);
+            console.log(`${pluralise(Object.keys(newOutput).length, 'commit')} after hours were made in the last ${pluralise(opts.dayCount, 'day')}`);
         }
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 function pluralise(val, str) {
@@ -174,7 +179,6 @@ async function gitoutofhours(opts) {
         try {
             const result = await runLogger(opts);
             if (result) {
-                console.log('Found data', result);
                 resolve(result);
             } else {
                 reject('No data returned');

@@ -74,8 +74,8 @@ describe('#gitoutofhours', () => {
     });
 
     it('should not allow empty results key values', async () => {
-        await expect(GitOutOfHours.displayResults({ a: null, b: null}, { author: null }))
-            .to.eventually.be.eq(false);
+        const result = await GitOutOfHours.displayResults({ a: null, b: null}, { author: null });
+        expect(result).to.be.eq(false);
     });
 
     it('should not allow single history promise fail', async () => {

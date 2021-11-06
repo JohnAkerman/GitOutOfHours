@@ -17,6 +17,13 @@
   "publishConfig": {
     "registry": "https://registry-url"
   },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
   "bugs": "https://github.com/JohnAkerman/GitOutOfHours/issues",
   "homepage": "https://github.com/JohnAkerman/GitOutOfHours",
   "keywords": [
@@ -37,8 +44,6 @@
     "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },
   "license": "MIT",
-  "dependencies": {
-  },
   "devDependencies": {
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",

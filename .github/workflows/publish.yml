@@ -89,10 +89,10 @@ jobs:
           sed -i 's,"name": "gitoutofhours","name": "@johnakerman/gitoutofhours",' package.json
           cat package.json
 
-      - name: Update Publish Config
-        run: |
-          sed -i 's^registry-url^npm.pkg.github.com/@johnakerman^' package.json
-          cat package.json
+#       - name: Update Publish Config
+#         run: |
+#           sed -i 's^registry-url^npm.pkg.github.com/@johnakerman^' package.json
+#           cat package.json
   
       - run: npm ci
       - run: npm publish --access public

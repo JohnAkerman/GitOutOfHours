@@ -1,62 +1,89 @@
+'use strict'
+
 const {spawn} = require('child_process');
 const moment = require('moment');
 
-const commitHistory = [];
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 
-function getCommitHistory(dateData, author) {
+function getCommitHistory({dateData, author, skipTimeCheck}) {
 	return new Promise((resolve, reject) => {
-		const git = spawn('git', ['log', '--date=rfc', '--since', dateData.start, '--until', dateData.end]);
+        const params = ['log'];
 
-		git.stdout.on('data', data => {
-			data = data.toString();
+        // Testing this is not easily do-able as the git commit could be ran
+        // any time of the day.
 
-			let commits = data.split(/\n\nc/);
+        /* istanbul ignore if */   
+        if (!skipTimeCheck) {
+            params.push('--date=rfc', '--since', dateData.start, '--until', dateData.end);
+        }
 
-			commits = commits.map(c => {
-				c = c.startsWith('c') ? c : 'c' + c;
+        let logData = [];
 
-				return {
-					author: c.match(/Author:\s([^<]+)?/)[1],
-					email: c.match(/<(.+)>/)[1],
-					date: c.match(/Date:\s*(.+)/)[1],
-					message: c.match(/\n\n\s*(.+)/)[1]
-				};
-			});
+        const git = spawn('git', params);
 
-			commits.forEach(commit => {
-				if (!commit) {
-					return;
-				}
+        git.stdout.on('data', data => {
+            data = data.toString();
 
-				// Filter by specific author
-				if (author && commit.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
-					return;
-				}
+            let commits = data.split(/\n\nc/);
 
-				const current = moment(commit.date).format(DATE_FORMAT_LOG);
+            commits = commits.map(c => {
+                c = c.startsWith('c') ? c : 'c' + c;
+                
+                return {
+                    author: c.match(/Author:\s([^<]+)?/)[1],
+                    email: c.match(/<(.+)>/)[1],
+                    date: c.match(/Date:\s*(.+)/)[1],
+                    message: c.match(/\n\n\s*(.+)/)[1]
+                };
+            });
 
-				if (!commitHistory[current]) {
-					commitHistory[current] = {};
-				}
+            logData = parseCommitData(logData, commits, author);
 
-				commitHistory[current] = {
-					author: commit.author.trim(),
-					email: commit.email.trim(),
-					message: commit.message.trim(),
-					date: moment(commit.date).format(TIME_FORMAT)
-				};
-			});
-		});
+        });
 
-		git.stderr.on('data', data => {
-			console.error('Error retreiving commits', data.toString());
-			reject(data.toString());
-		});
+        git.stderr.on('data', data => {
+            console.log(data.toString());
+            reject('Error retrieving commits');
+        });
 
-		git.on('exit', () => resolve());
+        git.on('exit', () => {
+            if (logData && logData.length > 0) resolve(logData)
+            else resolve(null);
+        });
 	});
+}
+
+function parseCommitData(logData, commits, author) {
+    commits.forEach(commit => {
+        if (!commit) {
+            return false;
+        }
+
+        // Filter by specific author
+        if (author && commit.author && commit.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
+            return;
+        }
+
+        if (!commit.date) {
+            return;
+        }
+
+        const current = moment(commit.date, "ddd MMM D HH:mm:ss YYYY ZZ").format(DATE_FORMAT_LOG);
+        
+        if (!logData[current]) {
+            logData[current] = {};
+        }
+
+        logData[current] = {
+            author: commit.author.trim(),
+            email: commit.email.trim(),
+            message: commit.message.trim(),
+            date: moment(commit.date, "ddd MMM D HH:mm:ss YYYY ZZ").format(TIME_FORMAT)
+        };
+    });
+
+    return logData;
 }
 
 function dateSelection(dayOffset) {
@@ -67,43 +94,101 @@ function dateSelection(dayOffset) {
 	end.subtract(dayOffset - 1, 'days');
 
 	return {
-		start,
-		end
+		start: start.format(DATE_FORMAT_LOG),
+		end: end.format(DATE_FORMAT_LOG)
 	};
 }
 
-async function runLogger(dayCount, author) {
-	if (!dayCount) {
-		console.error('Amount of days to search for is required');
-		return;
+async function runLogger(opts) {
+	if (!opts.dayCount) {
+        throw new Error('Amount of days to search for is required');
 	}
 
-	if (author) {
-		console.log(`Getting the last ${pluralise(dayCount, 'day')} commits by ${author} after hours (5:30pm to 8:30am)`);
-	} else {
-		console.log(`Getting the last ${pluralise(dayCount, 'day')} commits after hours (5:30pm to 8:30am)`);
-	}
+    if (isNaN(opts.dayCount)) {
+        throw new Error('Amount of days needs to be a number');
+    }
 
-	for (let i = 0; i < dayCount; i++) {
-		const dateData = dateSelection(i);
-		await getCommitHistory(dateData, author); // TODO: Update this to avoid await in loop and instead create promises
-	}
+    let outputString = `Getting the last ${pluralise(opts.dayCount, 'day')} commits`;
 
-	if (Object.keys(commitHistory).length > 0) {
-		console.table(commitHistory, ['author', 'message']);
-	}
+    if (opts.author) {
+        outputString += ` by ${opts.author} `;
+    }
 
-	if (author) {
-		console.log(`${author} committed late ${pluralise(Object.keys(commitHistory).length, 'time')} in the last ${pluralise(dayCount, 'day')}`);
-	} else {
-		console.log(`${pluralise(Object.keys(commitHistory).length, 'commit')} after hours were made in the last ${pluralise(dayCount, 'day')}`);
-	}
+    if (opts.skipTimeCheck == false) {
+        outputString += ` after hours (5:30pm to 8:30am)`;
+    }
+
+    console.log(outputString);
+
+    const promises = [];
+	for (let i = 0; i < opts.dayCount; i++) {
+        const dateData = dateSelection(i);
+        promises.push(getCommitHistory({ dateData, author: opts.author, skipTimeCheck: opts.skipTimeCheck}));
+    }
+
+   return await runHistoryPromises(promises, opts);
+}
+
+async function runHistoryPromises(promises, opts) {
+    return Promise.all(promises)
+        .then(async (logData) => {
+            if (!logData) return false;
+            return await displayResults(logData, opts);
+        })
+        .catch((err) => { console.log(err); return false; });
+}
+
+async function displayResults(commitHistory, opts) {
+    if (commitHistory == null) {
+        throw new Error('No commit history found');
+    }
+
+    Object.keys(commitHistory).forEach(key => {
+        if (commitHistory[key] === null) {
+            delete commitHistory[key];
+        }
+    });
+
+    if (commitHistory.length != 0 && Object.keys(commitHistory).length > 0) {
+        console.table(commitHistory, ['author', 'message']);
+        if (opts.author) {
+            console.log(`${opts.author} committed late ${pluralise(Object.keys(commitHistory).length, 'time')} in the last ${pluralise(opts.dayCount, 'day')}`);
+        } else {
+            console.log(`${pluralise(Object.keys(commitHistory).length, 'commit')} after hours were made in the last ${pluralise(opts.dayCount, 'day')}`);
+        }
+        return true;
+    } else {
+        return false;
+    }
 }
 
 function pluralise(val, str) {
 	return (val === 1 ? val + ' ' + str : val + ' ' + str + 's');
 }
 
-module.exports = {
-	runLogger
+async function gitoutofhours(opts) {
+    if (typeof opts != "object") throw new Error("No parameter object specified");
+    if (Object.keys(opts).length <= 0) throw new Error("No parameter values specified");
+
+    return new Promise(async (resolve, reject) => {
+        try {
+            const result = await runLogger(opts);
+            if (result) {
+                console.log('Found data', result);
+                resolve(result);
+            } else {
+                reject('No data returned');
+            }
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+module.exports = { 
+    gitoutofhours,
+    displayResults,
+    pluralise,
+    runHistoryPromises,
+    parseCommitData
 };

@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Zip
-        run: zip -9qry "release.zip"
+        run: zip -9qry "release.zip" "./" -x node_modules/*
       - name: Upload release.zip
         uses: actions/upload-artifact@v2
         with:

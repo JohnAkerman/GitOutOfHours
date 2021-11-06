@@ -15,8 +15,8 @@
     "url": "https://github.com/JohnAkerman/GitOutOfHours.git"
   },
   "publishConfig": {
-     "@JohnAkerman:registry": "https://npm.pkg.github.com"
-   },
+    "registry": "https://registry-url"
+  }
   "bugs": "https://github.com/JohnAkerman/GitOutOfHours/issues",
   "homepage": "https://github.com/JohnAkerman/GitOutOfHours",
   "keywords": [

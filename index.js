@@ -14,7 +14,7 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
         // Testing this is not easily do-able as the git commit could be ran
         // any time of the day.
 
-        /* istanbul ignore if */   
+        /* istanbul ignore next */
         if (!skipTimeCheck) {
             params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
         }
@@ -29,8 +29,6 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
             let commits = data.split(/\n\nc/);
 
             commits = commits.map(c => {
-                c = c.startsWith('c') ? c : 'c' + c;
-                
                 return {
                     author: c.match(/Author:\s([^<]+)?/)[1],
                     email: c.match(/<(.+)>/)[1],
@@ -43,23 +41,17 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
         });
 
         git.stderr.on('data', data => {
-            console.log(data.toString());
             reject('Error retrieving commits');
         });
 
         git.on('exit', () => {
-            if (logData) resolve(logData)
-            else reject('Error retrieving commits');
+            resolve(logData)
         });
 	});
 }
 
 function parseCommitData(logData, commits, author) {
     commits.forEach(commit => {
-        if (!commit) {
-            return false;
-        }
-
         // Filter by specific author
         if (author && commit.author && commit.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
             return;
@@ -132,10 +124,15 @@ async function runLogger(opts) {
 async function runHistoryPromises(promises, opts) {
     return Promise.all(promises)
         .then(async (logData) => {
-            if (!logData) return false;
             return await displayResults(logData, opts);
         })
-        .catch((err) => { console.log(err); return false; });
+        .catch((err) => { 
+            if (err == "Error retrieving commits") {
+                throw new Error(err);
+            } else {
+                return false;
+            }
+        });
 }
 
 async function displayResults(commitHistory, opts) {
@@ -177,12 +174,8 @@ async function gitoutofhours(opts) {
 
     return new Promise(async (resolve, reject) => {
         try {
-            const result = await runLogger(opts);
-            if (result) {
-                resolve(result);
-            } else {
-                reject('No data returned');
-            }
+            await runLogger(opts);
+            resolve();
         } catch (err) {
             reject(err);
         }

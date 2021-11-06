@@ -51,8 +51,31 @@ describe('#gitoutofhours', () => {
         });
 
         const out = GitOutOfHours.parseCommitData(logData, commits, 'John Smith');
-        console.log(out);
         expect(Object.keys(out).length).to.be.equal(1);
+    });
+
+    it('should filter out empty commit data', async () => {
+        const logData = [];
+        const commits = [];
+
+        const out = GitOutOfHours.parseCommitData(logData, commits, 'John Smith');
+        console.log("out", out);
+        expect(Object.keys(out).length).to.be.equal(0);
+    });
+
+    it('should filter out empty commit date', async () => {
+        const logData = [];
+        const commits = [];
+
+        commits.push({
+            author: 'John Smith',
+            email: 'test@example.com',
+            message: 'Test Commit 2'
+        });
+
+        const out = GitOutOfHours.parseCommitData(logData, commits, 'John Smith');
+        console.log("out", out);
+        expect(Object.keys(out).length).to.be.equal(0);
     });
 
 
@@ -93,6 +116,34 @@ describe('#gitoutofhours', () => {
         expect(result).to.be.eq(false);
     });
 
+    it('should display valid commit history data with author filter', async () => {
+        const commits =  {
+            '2021-11-06 10:05:00': {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '10:00:00',
+                message: 'Test Commit 1'
+            }
+        };
+
+        const result = await GitOutOfHours.displayResults(commits, { author: 'John Smith'});
+        expect(result).to.be.eq(true);
+    });
+
+    it('should display valid commit history data without author', async () => {
+        const commits =  {
+            '2021-11-06 10:05:00': {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '10:00:00',
+                message: 'Test Commit 1'
+            }
+        };
+
+        const result = await GitOutOfHours.displayResults(commits, { author: null });
+        expect(result).to.be.eq(true);
+    });
+
     before(() => {
         // Setup git repo example
         shell.config.resetForTesting();
@@ -131,7 +182,7 @@ describe('#gitoutofhours', () => {
 
     it('should throw an error if there are no commits', async () => {
         await expect(GitOutOfHours.gitoutofhours({ dayCount: 3}))
-            .to.eventually.be.rejectedWith('No data returned');
+            .to.eventually.be.rejectedWith('Error retrieving commits');
     });
 
     it('should create commits with no errors', async () => {
@@ -174,6 +225,16 @@ describe('#gitoutofhours', () => {
         }).catch(err => {
             console.log('err', err);
         });
+    });
+
+
+
+
+    it('should return ',  async() => {
+        const getDataStub = sandbox.stub(GitOutOfHours, 'gitoutofhours').resolves(true);
+        const result = await GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: true });
+        expect(result).to.be.eq(true);
+        expect(getDataStub).to.have.been.calledOnceWith({ dayCount: 2, skipTimeCheck: true });
     });
   
 

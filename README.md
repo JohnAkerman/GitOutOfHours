@@ -3,6 +3,8 @@
 > View commit information on out of hours commits on a repo
 <p align="center">
 <a href="https://www.npmjs.com/package/gitoutofhours" target="_blank"><img alt="npm" src="https://img.shields.io/npm/v/gitoutofhours"></a>
+  <a href='https://coveralls.io/github/JohnAkerman/GitOutOfHours?branch=master'><img src='https://coveralls.io/repos/github/JohnAkerman/GitOutOfHours/badge.svg?branch=master' alt='Coverage Status' /></a>
+<a href='https://app.travis-ci.com/JohnAkerman/GitOutOfHours'><img src='https://app.travis-ci.com/JohnAkerman/GitOutOfHours.svg?branch=master' alt='Build Status' /></a>
 <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/JohnAkerman/GitOutOfHours">
 <img alt="NPM" src="https://img.shields.io/npm/l/gitoutofhours">
 <img src="https://img.shields.io/github/languages/top/JohnAkerman/GitOutOfHours" alt="Top Language" />

@@ -13,17 +13,35 @@
   },
   "homepage": "https://github.com/JohnAkerman/GitOutOfHours",
   "keywords": [
+    "git-out-of-hours",
     "git",
     "logging",
     "repo",
+    "commit",
     "commits",
-    "overtime"
+    "overtime",
+    "log",
+    "git-log"
   ],
+  "scripts": {
+    "test": "mocha --timeout 5000  --require mocha-suppress-logs",
+    "test:full": "mocha --timeout 5000",
+    "test:coverage": "nyc --reporter=html npm run test",
+    "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
+  },
   "license": "MIT",
   "dependencies": {
     "moment": "^2.24.0"
   },
   "devDependencies": {
-    "xo": "^0.25.3"
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "coveralls": "^3.1.1",
+    "mocha": "^9.1.3",
+    "mocha-suppress-logs": "^0.3.1",
+    "nyc": "^15.1.0",
+    "shelljs": "^0.8.4",
+    "sinon": "^12.0.1",
+    "sinon-chai": "^3.7.0"
   }
 }

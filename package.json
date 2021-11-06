@@ -2,15 +2,19 @@
   "name": "gitoutofhours",
   "version": "0.1.1",
   "description": "View commit information on out of hours commits on a repo",
-  "main": "index.js",
+  "main": "src/index.js",
   "bin": {
     "gitoutofhours": "./bin/gitoutofhours.js"
   },
-  "author": "John Akerman",
+  "author": {
+    "name": "John Akerman",
+    "url": "https://www.johnakerman.co.uk/"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/JohnAkerman/GitOutOfHours.git"
   },
+  "bugs": "https://github.com/JohnAkerman/GitOutOfHours/issues",
   "homepage": "https://github.com/JohnAkerman/GitOutOfHours",
   "keywords": [
     "git-out-of-hours",

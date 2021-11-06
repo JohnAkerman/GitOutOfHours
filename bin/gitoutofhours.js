@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-const { gitoutofhours } = require('../index.js');
+const { gitoutofhours } = require('../src/index.js');
 
 switch (process.argv.length) {
     case 3:

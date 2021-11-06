@@ -11,11 +11,10 @@ const sinonChai = require('sinon-chai');
 chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
-
 const shell = require('shelljs')
 const fs = require('fs')
 
-const GitOutOfHours = require('./index.js');
+const GitOutOfHours = require('./src/index.js');
 
 describe('#gitoutofhours', () => {
     const sandbox = sinon.createSandbox();
@@ -226,9 +225,6 @@ describe('#gitoutofhours', () => {
             console.log('err', err);
         });
     });
-
-
-
 
     it('should return ',  async() => {
         const getDataStub = sandbox.stub(GitOutOfHours, 'gitoutofhours').resolves(true);

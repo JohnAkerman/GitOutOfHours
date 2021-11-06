@@ -16,7 +16,7 @@
   },
   "publishConfig": {
     "registry": "https://registry-url"
-  }
+  },
   "bugs": "https://github.com/JohnAkerman/GitOutOfHours/issues",
   "homepage": "https://github.com/JohnAkerman/GitOutOfHours",
   "keywords": [

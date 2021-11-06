@@ -1,7 +1,6 @@
 'use strict'
 
 const {spawn} = require('child_process');
-const moment = require('moment');
 
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
@@ -61,7 +60,7 @@ function parseCommitData(logData, commits, author) {
             return;
         }
 
-        const current = moment(commit.date, GIT_LOG_DATE_FORMAT).format(DATE_FORMAT_LOG);
+        const current = formatDate(parseDate(commit.date));
         
         if (!logData[current]) {
             logData[current] = {};
@@ -71,23 +70,54 @@ function parseCommitData(logData, commits, author) {
             author: commit.author.trim(),
             email: commit.email.trim(),
             message: commit.message.trim(),
-            date: moment(commit.date, GIT_LOG_DATE_FORMAT).format(TIME_FORMAT)
+            date: parseDateIntoTime(commit.date)
         };
     });
 
     return logData;
 }
 
-function dateSelection(dayOffset) {
-	const start = moment('05:30pm', 'HH:mm a');
-	start.subtract(dayOffset, 'days');
+function parseDateIntoTime(str) {
+    const datePattern = /^(\d{4})-(\d{2})-(\d{2})\s(\d{1,2}):(\d{2}):(\d{2})/;
+    const [, year, month, day, rawHour, min, secs] = datePattern.exec(str);
+    return `${('0' + rawHour).slice(-2)}:${min}:${secs}`;
+}
 
-	const end = moment('08:30am', 'HH:mm a');
-	end.subtract(dayOffset - 1, 'days');
+function parseDate(str) {
+    const datePattern = /^(\d{4})-(\d{2})-(\d{2})\s(\d{1,2}):(\d{2}):(\d{2})/;
+    const [, year, month, day, rawHour, min, secs] = datePattern.exec(str);
+    return new Date(`${year}-${month}-${day}T${('0' + rawHour).slice(-2)}:${min}:${secs}`);
+}
+
+function formatDate(dt) {
+    return(`${
+        dt.getFullYear().toString().padStart(4, '0')}-${
+        (dt.getMonth()+1).toString().padStart(2, '0')}-${
+        dt.getDate().toString().padStart(2, '0')} ${
+        dt.getHours().toString().padStart(2, '0')}:${
+        dt.getMinutes().toString().padStart(2, '0')}:${
+        dt.getSeconds().toString().padStart(2, '0')}`
+    );
+}
+
+function dateSelection(dayOffset) {
+    const start = new Date();
+    start.setDate(start.getDate() - dayOffset);
+    start.setHours(17);
+    start.setMinutes(30);
+    start.setMilliseconds(0);
+    start.setSeconds(0);
+
+    const end = new Date();
+    end.setDate(end.getDate() - dayOffset + 1);
+    end.setHours(8);
+    end.setMinutes(30);
+    end.setMilliseconds(0);
+    end.setSeconds(0);
 
 	return {
-		start: start.format(DATE_FORMAT_LOG),
-		end: end.format(DATE_FORMAT_LOG)
+        start: formatDate(start),
+        end: formatDate(end),
 	};
 }
 

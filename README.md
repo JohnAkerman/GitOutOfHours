@@ -6,7 +6,6 @@
   <a href='https://coveralls.io/github/JohnAkerman/GitOutOfHours?branch=master'><img src='https://coveralls.io/repos/github/JohnAkerman/GitOutOfHours/badge.svg?branch=master' alt='Coverage Status' /></a>
 <a href='https://app.travis-ci.com/JohnAkerman/GitOutOfHours'><img src='https://app.travis-ci.com/JohnAkerman/GitOutOfHours.svg?branch=master' alt='Build Status' /></a>
 <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/JohnAkerman/GitOutOfHours">
-<img alt="Libraries.io dependency status for GitHub repo" src="https://img.shields.io/librariesio/github/JohnAkerman/GitOutOfHours">
   <a href="https://snyk.io/test/github/JohnAkerman/GitOutOfHours"><img src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours/badge.svg" alt="Known Vulnerabilities" data-canonical-src="https://snyk.io/test/github/JohnAkerman/GitOutOfHours" style="max-width:100%;"></a>
   <img alt="NPM" src="https://img.shields.io/npm/l/gitoutofhours">
 <img src="https://img.shields.io/github/languages/top/JohnAkerman/GitOutOfHours" alt="Top Language" />

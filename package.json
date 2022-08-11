@@ -18,8 +18,8 @@
     "registry": "https://registry-url"
   },
   "files": [
-    "bin",
-    "src"
+    "bin/**/*",
+    "src/**/*"
   ],
   "engines": {
     "node": ">=10"
@@ -29,6 +29,8 @@
   "keywords": [
     "git-out-of-hours",
     "git",
+    "hours",
+    "time",
     "logging",
     "repo",
     "commit",

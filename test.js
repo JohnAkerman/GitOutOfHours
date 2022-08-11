@@ -23,6 +23,12 @@ describe('#gitoutofhours', () => {
         sandbox.restore();
     })
 
+    it('should parse a date correctly', async() => {
+        const inputDate = '2022-08-11 22:28:39 +0100';
+        const output = GitOutOfHours.parseDate(inputDate).toISOString();
+        expect(output).to.be.equal('2022-08-11T21:28:39.000Z');
+    });
+
     it('should filter out different author', async () => {
 
         const logData = [];

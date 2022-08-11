@@ -9,6 +9,7 @@ const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
 function getCommitHistory({dateData, author, skipTimeCheck}) {
 	return new Promise((resolve, reject) => {
         const params = ['log'];
+        const logs = [];
 
         // Testing this is not easily do-able as the git commit could be ran
         // any time of the day.
@@ -17,8 +18,6 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
         if (!skipTimeCheck) {
             params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
         }
-
-        let logData = [];
 
         const git = spawn('git', params);
 
@@ -36,57 +35,53 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
                 };
             });
 
-            parseCommitData(logData, commits, author);
+            parseCommitData(logs, commits, author);
         });
 
-        git.stderr.on('data', data => {
-            reject('Error retrieving commits');
-        });
-
-        git.on('exit', () => {
-            resolve(logData)
-        });
+        git.stderr.on('data', () => reject('Error retrieving commits') );
+        git.on('exit', () => resolve(logs));
 	});
 }
 
-function parseCommitData(logData, commits, author) {
-    commits.forEach(commit => {
+function parseCommitData(logs, commits, author) {
+    commits.forEach(c => {
         // Filter by specific author
-        if (author && commit.author && commit.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
+        if (author && c.author && c.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
             return;
         }
 
-        if (!commit.date) {
+        if (!c.date) {
             return;
         }
 
-        const current = formatDate(parseDate(commit.date));
+        const current = formatDate(parseDate(c.date));
         
-        if (!logData[current]) {
-            logData[current] = {};
+        if (!logs[current]) {
+            logs[current] = {};
         }
 
-        logData[current] = {
-            author: commit.author.trim(),
-            email: commit.email.trim(),
-            message: commit.message.trim(),
-            date: parseDateIntoTime(commit.date)
+        logs[current] = {
+            author: c.author.trim(),
+            email: c.email.trim(),
+            message: c.message.trim(),
+            date: parseDateIntoTime(c.date)
         };
     });
 
-    return logData;
+    return logs;
 }
 
 function parseDateIntoTime(str) {
     const datePattern = /^(\d{4})-(\d{2})-(\d{2})\s(\d{1,2}):(\d{2}):(\d{2})/;
-    const [, year, month, day, rawHour, min, secs] = datePattern.exec(str);
-    return `${('0' + rawHour).slice(-2)}:${min}:${secs}`;
+    const [,,,, hour, min, secs] = datePattern.exec(str);
+    return `${('0' + hour).slice(-2)}:${min}:${secs}`;
 }
 
 function parseDate(str) {
     const datePattern = /^(\d{4})-(\d{2})-(\d{2})\s(\d{1,2}):(\d{2}):(\d{2})/;
-    const [, year, month, day, rawHour, min, secs] = datePattern.exec(str);
-    return new Date(`${year}-${month}-${day}T${('0' + rawHour).slice(-2)}:${min}:${secs}`);
+    const result = datePattern.exec(str);
+    const [, year, month, day, hour, min, secs] = result;
+    return new Date(`${year}-${month}-${day}T${('0' + hour).slice(-2)}:${min}:${secs}`);
 }
 
 function formatDate(dt) {
@@ -136,7 +131,7 @@ async function runLogger(opts) {
         outputString += ` by ${opts.author} `;
     }
 
-    if (opts.skipTimeCheck == false) {
+    if (opts.skipTimeCheck === false) {
         outputString += ` after hours (5:30pm to 8:30am)`;
     }
 
@@ -153,11 +148,11 @@ async function runLogger(opts) {
 
 async function runHistoryPromises(promises, opts) {
     return Promise.all(promises)
-        .then(async (logData) => {
-            return await displayResults(logData, opts);
+        .then(async (logs) => {
+            return await displayResults(logs, opts);
         })
         .catch((err) => { 
-            if (err == "Error retrieving commits") {
+            if (err === "Error retrieving commits") {
                 throw new Error(err);
             } else {
                 return false;
@@ -165,19 +160,19 @@ async function runHistoryPromises(promises, opts) {
         });
 }
 
-async function displayResults(commitHistory, opts) {
-    if (commitHistory == null) {
+async function displayResults(commits, opts) {
+    let newOutput = [];
+
+    if (commits === null) {
         throw new Error('No commit history found');
     }
 
-    let newOutput = [];
+    Object.keys(commits).forEach(key => {
+        if (commits[key] === null) return false;
 
-    Object.keys(commitHistory).forEach(key => {
-        if (commitHistory[key] == null) return false;
-
-        Object.keys(commitHistory[key]).forEach(item => {
-            if (commitHistory[key][item] !== null) {
-                newOutput.push(commitHistory[key][item]);
+        Object.keys(commits[key]).forEach(item => {
+            if (commits[key][item] !== null) {
+                newOutput.push(commits[key][item]);
             }
         });
     });
@@ -195,7 +190,7 @@ async function displayResults(commitHistory, opts) {
 }
 
 function pluralise(val, str) {
-	return (val === 1 ? val + ' ' + str : val + ' ' + str + 's');
+	return (val === 1 ? `${val} ${str}` : `${val} ${str}s`);
 }
 
 async function gitoutofhours(opts) {
@@ -217,5 +212,6 @@ module.exports = {
     displayResults,
     pluralise,
     runHistoryPromises,
-    parseCommitData
+    parseCommitData,
+    parseDate
 };

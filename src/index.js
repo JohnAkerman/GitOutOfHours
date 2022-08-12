@@ -3,8 +3,8 @@ const {spawn} = require('child_process');
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
-const BOLD_START_CHARS = "\033[1m";
-const BOLD_END_CHARS = "\033[0m";
+const BOLD_START_CHARS = "\\u033[1m";
+const BOLD_END_CHARS = "\\u033[0m";
 
 function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
 	return new Promise((resolve, reject) => {

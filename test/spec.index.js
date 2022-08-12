@@ -1,4 +1,3 @@
-'use strict'
 const chai = require('chai');
 const chaiAsPromised = require('chai-as-promised');
 const expect = chai.expect;
@@ -14,7 +13,7 @@ chai.use(sinonChai);
 const shell = require('shelljs')
 const fs = require('fs')
 
-const GitOutOfHours = require('./src/index.js');
+const GitOutOfHours = require('../src/index.js');
 
 describe('#gitoutofhours', () => {
     const sandbox = sinon.createSandbox();

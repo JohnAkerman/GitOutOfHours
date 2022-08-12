@@ -2,7 +2,7 @@
   "name": "gitoutofhours",
   "version": "2.0.0",
   "description": "View commit information on out of hours commits on a repo",
-  "main": "src/index.js",
+  "main": "./src/index.js",
   "bin": {
     "gitoutofhours": "./bin/gitoutofhours.js"
   },
@@ -18,8 +18,8 @@
     "registry": "https://registry-url"
   },
   "files": [
-    "bin/**/*",
-    "src/**/*"
+    "bin",
+    "src"
   ],
   "engines": {
     "node": ">=10"
@@ -39,14 +39,32 @@
     "log",
     "git-log"
   ],
+  "nyc": {
+    "require": [
+      "@babel/register"
+    ],
+    "include": [
+      "src/**/*.js",
+      "src/index.js",
+      "./src/index.js"
+    ],
+    "reporter": [
+      "lcov",
+      "text-summary"
+    ],
+    "report-dir": "coverage",
+    "all": true
+  },
   "scripts": {
-    "test": "mocha --timeout 5000  --require mocha-suppress-logs",
-    "test:full": "mocha --timeout 5000",
-    "test:coverage": "nyc --reporter=html npm run test",
+    "test": "mocha test/*.js --timeout 55000 --require mocha-suppress-logs --exit",
+    "test:coverage": "nyc --reporter=lcov --reporter=html --reporter=text npm run test",
     "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },
   "license": "MIT",
   "devDependencies": {
+    "@babel/preset-env": "^7.18.10",
+    "@babel/register": "^7.18.9",
+    "babel-plugin-istanbul": "^6.1.1",
     "chai": "^4.3.6",
     "chai-as-promised": "^7.1.1",
     "coveralls": "^3.1.1",

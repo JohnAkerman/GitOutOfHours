@@ -6,7 +6,7 @@ const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
 
-function getCommitHistory({dateData, author, skipTimeCheck}) {
+function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
 	return new Promise((resolve, reject) => {
         const params = ['log'];
         const logs = [];
@@ -14,9 +14,15 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
         // Testing this is not easily do-able as the git commit could be ran
         // any time of the day.
 
+        params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
+
         /* istanbul ignore next */
         if (!skipTimeCheck) {
-            params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
+            //
+        }
+
+        if (branch) {
+            params.push(branch);
         }
 
         const git = spawn('git', params);
@@ -46,7 +52,7 @@ function getCommitHistory({dateData, author, skipTimeCheck}) {
 function parseCommitData(logs, commits, author) {
     commits.forEach(c => {
         // Filter by specific author
-        if (author && c.author && c.author.toLowerCase().trim() !== author.toLowerCase().trim()) {
+        if (author && c.author && c.author.toLowerCase().trim().includes(author.toLowerCase().trim()) == false) {
             return;
         }
 
@@ -95,20 +101,26 @@ function formatDate(dt) {
     );
 }
 
-function dateSelection(dayOffset) {
+function dateSelection(dayOffset, skipTimeCheck) {
     const start = new Date();
     start.setDate(start.getDate() - dayOffset);
-    start.setHours(17);
-    start.setMinutes(30);
-    start.setMilliseconds(0);
-    start.setSeconds(0);
+
+    if (skipTimeCheck === false) {
+        start.setHours(17);
+        start.setMinutes(30);
+        start.setMilliseconds(0);
+        start.setSeconds(0);
+    }
 
     const end = new Date();
     end.setDate(end.getDate() - dayOffset + 1);
-    end.setHours(8);
-    end.setMinutes(30);
-    end.setMilliseconds(0);
-    end.setSeconds(0);
+    
+    if (skipTimeCheck === false) {
+        end.setHours(8);
+        end.setMinutes(30);
+        end.setMilliseconds(0);
+        end.setSeconds(0);
+    }
 
 	return {
         start: formatDate(start),
@@ -117,18 +129,21 @@ function dateSelection(dayOffset) {
 }
 
 async function runLogger(opts) {
-	if (!opts.dayCount) {
+    if (!opts.dayCount) {
         throw new Error('Amount of days to search for is required');
 	}
-
     if (isNaN(opts.dayCount)) {
         throw new Error('Amount of days needs to be a number');
     }
 
     let outputString = `Getting the last ${pluralise(opts.dayCount, 'day')} commits`;
 
+    if (opts.branch) {
+        outputString += ` on branch ${opts.branch}`;
+    }
+
     if (opts.author) {
-        outputString += ` by ${opts.author} `;
+        outputString += ` by ${opts.author}`;
     }
 
     if (opts.skipTimeCheck === false) {
@@ -139,8 +154,8 @@ async function runLogger(opts) {
 
     const promises = [];
 	for (let i = 0; i < opts.dayCount; i++) {
-        const dateData = dateSelection(i);
-        promises.push(getCommitHistory({ dateData, author: opts.author, skipTimeCheck: opts.skipTimeCheck}));
+        const dateData = dateSelection(i, opts.skipTimeCheck);
+        promises.push(getCommitHistory({ dateData, author: opts.author, skipTimeCheck: opts.skipTimeCheck, branch: opts.branch }));
     }
 
    return runHistoryPromises(promises, opts);
@@ -199,8 +214,8 @@ async function gitoutofhours(opts) {
 
     return new Promise(async (resolve, reject) => {
         try {
-            await runLogger(opts);
-            resolve();
+            await runLogger(opts)
+            .then(() => resolve())
         } catch (err) {
             reject(err);
         }

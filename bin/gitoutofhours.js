@@ -1,28 +1,42 @@
 #!/usr/bin/env node
 'use strict';
 const { gitoutofhours } = require('../src/index.js');
+const argv = require('yargs')
+    .usage('Usage: [options]')
+    .help('help')
+    .alias('help', 'h')
+    .option('days', {
+        alias: 'd',
+        description: 'How many days in the past to search for commits (higher number takes longer)',
+        type: 'number',
+        demandOption: true
+    })
+    .option('author', {
+        alias: 'a',
+        description: 'Search for commits by particular author',
+        type: 'string'
+    })
+    .option('anytime', {
+        default: false,
+        description: 'Search for commits any time of the day',
+        type: 'boolean'
+    })
+    .option('branch', {
+        alias: 'b',
+        default: 'master',
+        description: 'Search for commits in a particular branch',
+        type: 'string'
+    })
+    .example('$0 -d 5 --author <name> --branch master').argv;
 
-switch (process.argv.length) {
-    case 3:
-	    gitoutofhours({ dayCount: process.argv[2]})
-            .catch(err => console.error(err));
-        break;
+global.argv = argv;
 
-    case 4:
-	    gitoutofhours({ dayCount: process.argv[2], author: process.argv[3]})
-            .catch(err => console.error(err));
-        break;
-
-    case 5:
-        gitoutofhours({
-            dayCount: process.argv[2],
-            author: process.argv[3],
-            skipTimeCheck: process.argv[4]
-        }).catch(err => console.error(err));
-        break;
-
-    default:
-        process.stderr.write('No parameters given\nUsage: gitoutofhours [days in past] [author?]');
-        process.exit(1);
-        break;
-}
+gitoutofhours({
+    dayCount: argv.days,
+    author: argv.author,
+    skipTimeCheck: argv.anytime,
+    branch: argv.branch
+}).then(() => process.exit(1)).catch(err => {
+    console.error(err);
+    process.exit(1);
+});

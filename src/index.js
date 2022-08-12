@@ -1,10 +1,10 @@
-'use strict'
-
 const {spawn} = require('child_process');
 
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
+const BOLD_START_CHARS = "\033[1m";
+const BOLD_END_CHARS = "\033[0m";
 
 function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
 	return new Promise((resolve, reject) => {
@@ -136,14 +136,14 @@ async function runLogger(opts) {
         throw new Error('Amount of days needs to be a number');
     }
 
-    let outputString = `Getting the last ${pluralise(opts.dayCount, 'day')} commits`;
+    let outputString = `Getting the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS} commits`;
 
     if (opts.branch) {
-        outputString += ` on branch ${opts.branch}`;
+        outputString += ` on branch ${BOLD_START_CHARS}${opts.branch}${BOLD_END_CHARS}`;
     }
 
     if (opts.author) {
-        outputString += ` by ${opts.author}`;
+        outputString += ` by ${BOLD_START_CHARS}${opts.author}${BOLD_END_CHARS}`;
     }
 
     if (opts.skipTimeCheck === false) {
@@ -195,9 +195,9 @@ async function displayResults(commits, opts) {
     if (newOutput.length > 0 && Object.keys(newOutput).length > 0) {
         console.table(newOutput, ['author', 'date', 'message']);
         if (opts.author) {
-            console.log(`${opts.author} committed late ${pluralise(Object.keys(newOutput).length, 'time')} in the last ${pluralise(opts.dayCount, 'day')}`);
+            console.log(`${BOLD_START_CHARS}${opts.author}${BOLD_END_CHARS} committed late ${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'time')}${BOLD_END_CHARS} in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
         } else {
-            console.log(`${pluralise(Object.keys(newOutput).length, 'commit')} after hours were made in the last ${pluralise(opts.dayCount, 'day')}`);
+            console.log(`${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'commit')}${BOLD_END_CHARS} after hours were made in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
         }
         return true;
     }

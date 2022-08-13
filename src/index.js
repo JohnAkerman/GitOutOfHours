@@ -11,15 +11,7 @@ function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
         const params = ['log'];
         const logs = [];
 
-        // Testing this is not easily do-able as the git commit could be ran
-        // any time of the day.
-
         params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
-
-        /* istanbul ignore next */
-        if (!skipTimeCheck) {
-            //
-        }
 
         if (branch) {
             params.push(branch);
@@ -209,6 +201,7 @@ function pluralise(val, str) {
 }
 
 async function gitoutofhours(opts) {
+    console.log("found opts", opts);
     if (typeof opts != "object") throw new Error("No parameter object specified");
     if (Object.keys(opts).length <= 0) throw new Error("No parameter values specified");
 

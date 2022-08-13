@@ -83,11 +83,11 @@ describe('#gitoutofhours', () => {
     });
 
 
-    it('should not GitOutOfHours.pluralise word', () => {
+    it('should not pluralise word', () => {
         expect(GitOutOfHours.pluralise(1, 'dog')).to.be.equal('1 dog');
     });
 
-    it('should GitOutOfHours.pluralise word', () => {
+    it('should pluralise word', () => {
         expect(GitOutOfHours.pluralise(2, 'dog')).to.be.equal('2 dogs');
     });
 
@@ -147,6 +147,8 @@ describe('#gitoutofhours', () => {
         const result = await GitOutOfHours.displayResults(commits, { author: null });
         expect(result).to.be.eq(true);
     });
+
+
 
     before(() => {
         // Setup git repo example
@@ -223,21 +225,20 @@ describe('#gitoutofhours', () => {
         expect(getDataStub).to.have.been.calledOnceWith({ dayCount: 2, skipTimeCheck: false, author: 'gitoutofhours' });
     });
 
-    it('should find not find a commit using gitoutofhours with username', async () => {
-        await GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: false, author: 'notgitoutofhours' }).then((out) => {
-            console.log('x', out);
-        }).catch(err => {
-            console.log('err', err);
-        });
+    it('should succeed when searching for commits in master branch', async () => {
+        await expect(GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: false, author: 'gitoutofhours', branch: 'master' }))
+            .to.eventually.be.fulfilled;
     });
 
-    it('should return ',  async() => {
-        const getDataStub = sandbox.stub(GitOutOfHours, 'gitoutofhours').resolves(true);
-        const result = await GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: true });
-        expect(result).to.be.eq(true);
-        expect(getDataStub).to.have.been.calledOnceWith({ dayCount: 2, skipTimeCheck: true });
+    it('should find error when searching for commits in a random branch', async () => {
+        await expect(GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: false, author: 'gitoutofhours', branch: 'aRandomBranch' }))
+            .to.eventually.be.rejectedWith('Error retrieving commits');
     });
-  
+
+    it('should find not find a commit using gitoutofhours with username', async () => {
+        const result = await GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: false, author: 'notgitoutofhours' });
+        console.log('xxx', result);
+    });
 
     after('cleaning up', () => {
         shell.config.resetForTesting();

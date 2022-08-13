@@ -57,6 +57,7 @@
   },
   "scripts": {
     "test": "mocha test/*.js --timeout 55000 --require mocha-suppress-logs --exit",
+    "test:full": "mocha test/*.js --timeout 55000 --exit",
     "test:coverage": "nyc --reporter=lcov --reporter=html --reporter=text npm run test",
     "test:coveralls": "nyc npm test && nyc report --reporter=text-lcov | coveralls"
   },

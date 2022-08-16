@@ -34,6 +34,7 @@ describe('#gitoutofhours', () => {
         const commits = [];
 
         commits.push({
+            hash: '312bf3bfgb3974d78e9c1fcd935f14514600839f',
             author: 'John Smith',
             email: 'test@example.com',
             date: '2021-11-05 10:00:00',
@@ -41,6 +42,7 @@ describe('#gitoutofhours', () => {
         });
 
         commits.push({
+            hash: '194c831626830a0c16802636cfc32e4f85f15f8a',
             author: 'John Smith',
             email: 'test@example.com',
             date: '2021-11-05 10:00:00',
@@ -48,6 +50,7 @@ describe('#gitoutofhours', () => {
         });
 
         commits.push({
+            hash: '6e2e3412a03f91aa2698cae4b890007e180953ba',
             author: 'Jane Smith',
             email: 'jane@example.com',
             date: '2021-11-06 10:05:00',
@@ -72,6 +75,7 @@ describe('#gitoutofhours', () => {
         const commits = [];
 
         commits.push({
+            hash: '20ecb4aaa0e05637842d4a9f85099d54d1c76ce2',
             author: 'John Smith',
             email: 'test@example.com',
             message: 'Test Commit 2'

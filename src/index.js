@@ -3,13 +3,13 @@ const {spawn} = require('child_process');
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
-const BOLD_START_CHARS = "\\u033[1m";
-const BOLD_END_CHARS = "\\u033[0m";
+const BOLD_START_CHARS = "\033[1m";
+const BOLD_END_CHARS = "\033[0m";
 
-function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
+function getCommitHistory({dateData, author, branch}) {
 	return new Promise((resolve, reject) => {
         const params = ['log'];
-        const logs = [];
+        let logs = [];
 
         params.push('--date=iso', `--since="${dateData.start}"`, `--until="${dateData.end}"`);
 
@@ -26,6 +26,7 @@ function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
 
             commits = commits.map(c => {
                 return {
+                    hash: c.match(/ommit\s([a-z0-9]{40})?/)[1],
                     author: c.match(/Author:\s([^<]+)?/)[1],
                     email: c.match(/<(.+)>/)[1],
                     date: c.match(/Date:\s*(.+)/)[1],
@@ -33,7 +34,7 @@ function getCommitHistory({dateData, author, skipTimeCheck, branch}) {
                 };
             });
 
-            parseCommitData(logs, commits, author);
+            logs = parseCommitData(logs, commits, author);
         });
 
         git.stderr.on('data', () => reject('Error retrieving commits') );
@@ -59,6 +60,7 @@ function parseCommitData(logs, commits, author) {
         }
 
         logs[current] = {
+            hash: c.hash.trim().slice(0, 7),
             author: c.author.trim(),
             email: c.email.trim(),
             message: c.message.trim(),
@@ -185,13 +187,15 @@ async function displayResults(commits, opts) {
     });
 
     if (newOutput.length > 0 && Object.keys(newOutput).length > 0) {
-        console.table(newOutput, ['author', 'date', 'message']);
+        console.table(newOutput, ['hash', 'author', 'date', 'message']);
         if (opts.author) {
             console.log(`${BOLD_START_CHARS}${opts.author}${BOLD_END_CHARS} committed late ${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'time')}${BOLD_END_CHARS} in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
         } else {
             console.log(`${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'commit')}${BOLD_END_CHARS} after hours were made in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
         }
         return true;
+    } else {
+        console.log("No commits found with that criteria.");
     }
     return false;
 }
@@ -201,7 +205,6 @@ function pluralise(val, str) {
 }
 
 async function gitoutofhours(opts) {
-    console.log("found opts", opts);
     if (typeof opts != "object") throw new Error("No parameter object specified");
     if (Object.keys(opts).length <= 0) throw new Error("No parameter values specified");
 

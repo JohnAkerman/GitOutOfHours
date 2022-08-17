@@ -9,6 +9,7 @@ const argv = require('yargs')
         alias: 'd',
         description: 'How many days in the past to search for commits (higher number takes longer)',
         type: 'number',
+        default: 30,
         demandOption: true
     })
     .option('author', {

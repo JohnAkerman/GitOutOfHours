@@ -96,13 +96,13 @@ function formatDate(dt) {
     );
 }
 
-function dateSelection(dayOffset, skipTimeCheck) {
+function dateSelection(dayOffset, opts) {
     const start = new Date();
     start.setDate(start.getDate() - dayOffset);
 
-    if (skipTimeCheck === false) {
-        start.setHours(17);
-        start.setMinutes(30);
+    if (opts.skipTimeCheck === false) {
+        start.setHours(opts.start);
+        start.setMinutes(0);
         start.setMilliseconds(0);
         start.setSeconds(0);
     }
@@ -110,9 +110,9 @@ function dateSelection(dayOffset, skipTimeCheck) {
     const end = new Date();
     end.setDate(end.getDate() - dayOffset + 1);
     
-    if (skipTimeCheck === false) {
-        end.setHours(8);
-        end.setMinutes(30);
+    if (opts.skipTimeCheck === false) {
+        end.setHours(opts.end);
+        end.setMinutes(0);
         end.setMilliseconds(0);
         end.setSeconds(0);
     }
@@ -142,14 +142,14 @@ async function runLogger(opts) {
     }
 
     if (opts.skipTimeCheck === false) {
-        outputString += ` after hours (5:30pm to 8:30am)`;
+        outputString += ` after hours (${opts.start}:00 to ${opts.end}:00)`;
     }
 
     console.log(outputString);
 
     const promises = [];
 	for (let i = 0; i < opts.dayCount; i++) {
-        const dateData = dateSelection(i, opts.skipTimeCheck);
+        const dateData = dateSelection(i, opts);
         promises.push(getCommitHistory({ dateData, author: opts.author, skipTimeCheck: opts.skipTimeCheck, branch: opts.branch }));
     }
 

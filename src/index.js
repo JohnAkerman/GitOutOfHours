@@ -3,8 +3,8 @@ const {spawn} = require('child_process');
 const DATE_FORMAT_LOG = 'YYYY-MM-DD HH:mm:ss';
 const TIME_FORMAT = 'HH:mm:ss';
 const GIT_LOG_DATE_FORMAT = "YYYY-MM-DD HH:mm:ss ZZ";
-const BOLD_START_CHARS = "\033[1m";
-const BOLD_END_CHARS = "\033[0m";
+const BOLD_START_CHARS = "\u001B[1m";
+const BOLD_END_CHARS = "\u001B[22m";
 
 function getCommitHistory({dateData, author, branch}) {
 	return new Promise((resolve, reject) => {
@@ -54,6 +54,7 @@ function parseCommitData(logs, commits, author) {
         }
 
         const current = formatDate(parseDate(c.date));
+
         
         if (!logs[current]) {
             logs[current] = {};
@@ -171,7 +172,7 @@ async function runHistoryPromises(promises, opts) {
 
 async function displayResults(commits, opts) {
     let newOutput = [];
-
+        
     if (commits === null) {
         throw new Error('No commit history found');
     }
@@ -188,12 +189,25 @@ async function displayResults(commits, opts) {
 
     if (newOutput.length > 0 && Object.keys(newOutput).length > 0) {
         console.table(newOutput, ['hash', 'author', 'date', 'message']);
-        if (opts.author) {
-            console.log(`${BOLD_START_CHARS}${opts.author}${BOLD_END_CHARS} committed late ${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'time')}${BOLD_END_CHARS} in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
-        } else {
-            console.log(`${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'commit')}${BOLD_END_CHARS} after hours were made in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}`);
+
+        let mostCommonStr = '';
+        if (newOutput.length > 4) {
+            const commonHour = mostCommonHour(newOutput.map(c => c.date));
+            const timePeriod = mostCommonHourTimePeriod(commonHour);
+            const convertHourToAmPm = parseInt(commonHour) > 12 ? (parseInt(commonHour) - 12) : parseInt(commonHour);
+            mostCommonStr = `, with the most common hour being ${convertHourToAmPm}${timePeriod}`;
         }
-        return true;
+
+        let logOutput =  null;
+        if (opts.author) {
+            logOutput = `${BOLD_START_CHARS}${opts.author}${BOLD_END_CHARS} committed late ${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'time')}${BOLD_END_CHARS} in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}${mostCommonStr}.`;
+        } else {
+            logOutput = `${BOLD_START_CHARS}${pluralise(Object.keys(newOutput).length, 'commit')}${BOLD_END_CHARS} after hours were made in the last ${BOLD_START_CHARS}${pluralise(opts.dayCount, 'day')}${BOLD_END_CHARS}${mostCommonStr}.`;
+        }
+
+        console.log(logOutput);
+
+        return logOutput;
     } else {
         console.log("No commits found with that criteria.");
     }
@@ -202,6 +216,27 @@ async function displayResults(commits, opts) {
 
 function pluralise(val, str) {
 	return (val === 1 ? `${val} ${str}` : `${val} ${str}s`);
+}
+
+function mostCommonHour(hours) {
+    const parsedHours = hours.map(h => h.slice(0, 2));
+    const counts = {};
+    let maximum = 0;
+    let result = null;
+    
+    for (var h in parsedHours) {
+        counts[parsedHours[h]] = (counts[parsedHours[h]] || 0) + 1;
+        if (counts[parsedHours[h]] > maximum) { 
+            maximum = counts[parsedHours[h]];
+            result = parsedHours[h];
+        }
+    }
+
+    return result;
+}
+
+function mostCommonHourTimePeriod(hour) {
+    return (parseInt(hour) < 12 ? 'am' : 'pm');
 }
 
 async function gitoutofhours(opts) {
@@ -224,5 +259,7 @@ module.exports = {
     pluralise,
     runHistoryPromises,
     parseCommitData,
-    parseDate
+    parseDate,
+    mostCommonHour,
+    mostCommonHourTimePeriod
 };

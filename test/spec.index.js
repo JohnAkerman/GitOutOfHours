@@ -134,25 +134,26 @@ describe('#gitoutofhours', () => {
             }
         };
 
-        const result = await GitOutOfHours.displayResults(commits, { author: 'John Smith'});
-        expect(result).to.be.eq(true);
+        const result = await GitOutOfHours.displayResults(commits, { author: 'John Smith', dayCount: 1});
+        console.log(result);
+        expect(result).to.be.eq('\u001B[1mJohn Smith\u001B[22m committed late \u001B[1m4 times\u001B[22m in the last \u001B[1m1 day\u001B[22m.');
     });
 
     it('should display valid commit history data without author', async () => {
-        const commits =  {
-            '2021-11-06 10:05:00': {
+        const commits =  [];
+
+        commits.push(
+            {['2021-11-06 10:05:00']: {
                 author: 'John Smith',
                 email: 'test@example.com',
                 date: '10:00:00',
                 message: 'Test Commit 1'
-            }
-        };
+            }}
+        );
 
-        const result = await GitOutOfHours.displayResults(commits, { author: null });
-        expect(result).to.be.eq(true);
+        const result = await GitOutOfHours.displayResults(commits, { author: null, dayCount: 3 });
+        expect(result).to.be.eq('\u001B[1m1 commit\u001B[22m after hours were made in the last \u001B[1m3 days\u001B[22m.');
     });
-
-
 
     before(() => {
         // Setup git repo example
@@ -242,6 +243,124 @@ describe('#gitoutofhours', () => {
     it('should find not find a commit using gitoutofhours with username', async () => {
         const result = await GitOutOfHours.gitoutofhours({ dayCount: 2, skipTimeCheck: false, author: 'notgitoutofhours' });
         console.log('xxx', result);
+    });
+
+    it('should return the correct most common hour from commits when theres a clear winner', () => {
+        const hours = ['18:08:38', '18:00:34', '17:46:15','00:40:32','00:43:48','04:39:39', '04:21:20', '04:53:26', '03:07:49', '02:13:31', '00:07:29', '22:25:19', '23:26:50'];
+        const result = GitOutOfHours.mostCommonHour(hours);
+        expect(result).to.be.a('string');
+        expect(result).to.be.equal('04');
+    });
+
+    it('should return the correct most common hour from commits when theres a tie', () => {
+        const hours = ['18:08:38', '15:00:34', '17:46:15','00:40:32','00:43:48','04:39:39', '04:21:20', '01:53:26', '03:07:49', '02:13:31', '01:07:29', '22:25:19', '23:26:50'];
+        const result = GitOutOfHours.mostCommonHour(hours);
+        expect(result).to.be.a('string');
+        expect(result).to.be.equal('00');
+    });
+
+    it('should return the correct time period am/pm', () => {
+        const resultA = GitOutOfHours.mostCommonHourTimePeriod('10');
+        expect(resultA).to.be.a('string');
+        expect(resultA).to.be.equal('am');
+
+        const resultB = GitOutOfHours.mostCommonHourTimePeriod('02');
+        expect(resultB).to.be.a('string');
+        expect(resultB).to.be.equal('am');
+
+        const resultC = GitOutOfHours.mostCommonHourTimePeriod('12');
+        expect(resultC).to.be.a('string');
+        expect(resultC).to.be.equal('pm');
+
+        const resultD = GitOutOfHours.mostCommonHourTimePeriod('18');
+        expect(resultD).to.be.a('string');
+        expect(resultD).to.be.equal('pm');
+
+        const resultE = GitOutOfHours.mostCommonHourTimePeriod('23');
+        expect(resultE).to.be.a('string');
+        expect(resultE).to.be.equal('pm');
+    });
+
+    it('should display valid commit history data with correct most common hour and time', async () => {
+        const commitsA = [[],[]];
+
+        commitsA.push(
+            {["2022-08-17 10:05:00"]: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '10:05:00',
+                message: 'Test Commit 1'
+            }},
+            {['2022-08-17 10:15:35']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '10:15:35',
+                message: 'Test Commit 2'
+            }},
+            {['2022-08-17 10:22:03']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '10:22:03',
+                message: 'Test Commit 3'
+            }},
+            {['2022-08-17 14:27:03']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '14:27:03',
+                message: 'Test Commit 4'
+            }},
+            {['2022-08-17 21:51:53']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '21:51:53',
+                message: 'Test Commit 5'
+            }}
+        );
+
+        const resultA = await GitOutOfHours.displayResults(commitsA, { dayCount: 5});
+        console.log("resultA", resultA);
+        expect(resultA).to.be.a('string');
+        expect(resultA).to.be.eq('\u001B[1m5 commits\u001B[22m after hours were made in the last \u001B[1m5 days\u001B[22m, with the most common hour being 10am.');
+
+        const commitsB = [[],[]];
+
+        commitsB.push(
+            {["2022-08-17 15:05:00"]: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '15:05:00',
+                message: 'Test Commit 1'
+            }},
+            {['2022-08-17 15:15:35']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '15:15:35',
+                message: 'Test Commit 2'
+            }},
+            {['2022-08-17 15:22:03']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '15:22:03',
+                message: 'Test Commit 3'
+            }},
+            {['2022-08-17 14:27:03']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '14:27:03',
+                message: 'Test Commit 4'
+            }},
+            {['2022-08-17 21:51:53']: {
+                author: 'John Smith',
+                email: 'test@example.com',
+                date: '21:51:53',
+                message: 'Test Commit 5'
+            }}
+        );
+
+        const resultB = await GitOutOfHours.displayResults(commitsB, { dayCount: 5});
+        console.log("resultB", resultB);
+        expect(resultB).to.be.a('string');
+        expect(resultB).to.be.eq('\u001B[1m5 commits\u001B[22m after hours were made in the last \u001B[1m5 days\u001B[22m, with the most common hour being 3pm.');
     });
 
     after('cleaning up', () => {
